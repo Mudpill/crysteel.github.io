@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crysteel Weapon Configurator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #d8d6ce;
+    --border-strong: #b0ada2;
+    --text: #1a1917;
+    --text-muted: #6b6860;
+    --accent: #2c5f9e;
+    --accent-light: #e8f0fb;
+    --accent-hover: #234e85;
+    --danger: #c0392b;
+    --danger-light: #fdecea;
+    --success: #27ae60;
+    --warn: #e67e22;
+    --warn-light: #fef3e6;
+    --radius: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+  }
+  header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  header span { font-size: 13px; color: var(--text-muted); }
+
+  .app {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 20px 20px 40px;
+    display: grid;
+    grid-template-columns: 260px 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+  }
+  .panel-body { padding: 16px; }
+
+  /* ── CHARACTER STATS ── */
+  .stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .stat-row:last-child { margin-bottom: 0; }
+  .stat-label { font-size: 13px; color: var(--text-muted); }
+  .stat-input {
+    width: 64px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    text-align: center;
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+  .stat-input:focus { outline: none; border-color: var(--accent); }
+
+  /* ── WEAPON PANEL ── */
+  .weapon-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .weapon-name { font-size: 17px; font-weight: 700; }
+  .weapon-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .bonus-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .bonus-row label { font-size: 13px; color: var(--text-muted); }
+  .bonus-select {
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    gap: 10px;
+    margin: 14px 0 0;
+    flex-wrap: wrap;
+  }
+  .stat-chip {
+    flex: 1;
+    min-width: 90px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    text-align: center;
+  }
+  .stat-chip .val {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .stat-chip .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  /* ── POINTS BAR ── */
+  .points-bar {
+    margin: 14px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .points-label { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+  .pips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .pip {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pip.used { background: var(--accent); border-color: var(--accent); }
+  .pip.over { background: var(--danger); border-color: var(--danger); }
+  .points-text { font-size: 13px; font-weight: 600; }
+  .points-text.over { color: var(--danger); }
+
+  /* ── ENHANCEMENTS ── */
+  .enh-list { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .enh-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .enh-item.active { border-color: var(--accent); }
+  .enh-item.active .enh-header { background: var(--accent-light); }
+
+  .enh-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: var(--surface2);
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .enh-header:hover { background: var(--accent-light); }
+
+  .enh-check {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+    font-size: 11px;
+    color: #fff;
+  }
+  .enh-item.active .enh-check { background: var(--accent); border-color: var(--accent); }
+  .enh-item.active .enh-check::after { content: '✓'; }
+
+  .enh-info { flex: 1; min-width: 0; }
+  .enh-title-row { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .enh-name { font-size: 13px; font-weight: 600; }
+  .enh-cost {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .enh-item.active .enh-cost { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .enh-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+
+  /* multi-point stepper */
+  .enh-stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .stepper-label { font-size: 12px; color: var(--text-muted); }
+  .stepper-btn {
+    width: 24px; height: 24px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface2);
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.1s;
+  }
+  .stepper-btn:hover { background: var(--accent-light); border-color: var(--accent); }
+  .stepper-val { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
+
+  /* special inputs */
+  .enh-extra {
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .enh-extra label { font-size: 12px; color: var(--text-muted); }
+  .enh-extra select, .enh-extra input {
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 12px;
+    background: var(--surface);
+  }
+
+  /* ── RESULT BOX ── */
+  .result-box {
+    margin-top: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  .result-box h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; }
+  .result-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid var(--border); }
+  .result-row:last-child { border-bottom: none; }
+  .result-key { color: var(--text-muted); }
+  .result-val { font-weight: 600; }
+  .result-val.green { color: var(--success); }
+  .result-val.blue { color: var(--accent); }
+  .result-val.orange { color: var(--warn); }
+
+  .tag-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--accent-light);
+    border: 1px solid #c0d4f0;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .tag.orange { background: var(--warn-light); border-color: #f0c080; color: var(--warn); }
+
+  /* ── MASTERY SELECTOR ── */
+  .mastery-grid { display: flex; flex-direction: column; gap: 4px; }
+  .mastery-opt {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.1s;
+  }
+  .mastery-opt:hover { background: var(--accent-light); }
+  .mastery-opt input[type=checkbox] { accent-color: var(--accent); }
+
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr 1fr; }
+    .app > .panel:first-child { grid-column: 1 / -1; }
+  }
+  @media (max-width: 600px) {
+    .app { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>⚙ Crysteel Weapon Configurator</h1>
+    <span>Allocate enhancement points per weapon</span>
+  </div>
+</header>
+
+<div class="app">
+  <!-- Character Stats -->
+  <div class="panel" id="stats-panel">
+    <div class="panel-header">Character Stats</div>
+    <div class="panel-body">
+      <div class="stat-row"><span class="stat-label">Level</span><input class="stat-input" id="char-level" type="number" min="1" max="20" value="5"></div>
+      <div class="stat-row"><span class="stat-label">Proficiency Bonus</span><input class="stat-input" id="char-prof" type="number" min="2" max="9" value="3"></div>
+      <div class="divider"></div>
+      <div class="stat-row"><span class="stat-label">STR mod</span><input class="stat-input" id="stat-str" type="number" min="-5" max="10" value="0"></div>
+      <div class="stat-row"><span class="stat-label">DEX mod</span><input class="stat-input" id="stat-dex" type="number" min="-5" max="10" value="3"></div>
+      <div class="stat-row"><span class="stat-label">CON mod</span><input class="stat-input" id="stat-con" type="number" min="-5" max="10" value="1"></div>
+      <div class="stat-row"><span class="stat-label">INT mod</span><input class="stat-input" id="stat-int" type="number" min="-5" max="10" value="0"></div>
+      <div class="stat-row"><span class="stat-label">WIS mod</span><input class="stat-input" id="stat-wis" type="number" min="-5" max="10" value="1"></div>
+      <div class="stat-row"><span class="stat-label">CHA mod</span><input class="stat-input" id="stat-cha" type="number" min="-5" max="10" value="2"></div>
+      <div class="divider"></div>
+      <div class="stat-row"><span class="stat-label">Other Attack Bonus</span><input class="stat-input" id="stat-other" type="number" min="-10" max="20" value="0"></div>
+    </div>
+  </div>
+
+  <!-- Weapon Left -->
+  <div class="panel" id="weapon-left-panel">
+    <div class="panel-header">Left Pistol</div>
+    <div class="panel-body" id="weapon-left-body"></div>
+  </div>
+
+  <!-- Weapon Right -->
+  <div class="panel" id="weapon-right-panel">
+    <div class="panel-header">Right Pistol</div>
+    <div class="panel-body" id="weapon-right-body"></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const ABILITY_NAMES = ['str','dex','con','int','wis','cha'];
+
+const ENHANCEMENTS = [
+  {
+    id: 1,
+    name: "Accuracy",
+    costLabel: "1 pt",
+    baseCost: 1,
+    multi: false,
+    desc: "Add 1d4 to attack rolls with this weapon.",
+    effect: (w) => { w.attackBonusDice = (w.attackBonusDice||'') + (w.attackBonusDice ? ' + 1d4' : '1d4'); }
+  },
+  {
+    id: 2,
+    name: "Bonus Damage",
+    costLabel: "1–6 pts",
+    baseCost: 1,
+    multi: true, minPts: 1, maxPts: 6,
+    desc: "1–2 pts: +1d6 damage. 3–5 pts: +2d6 damage. 6 pts: +4d6 damage. Limit = proficiency bonus.",
+    extraDamage: (pts) => pts >= 6 ? '4d6' : pts >= 3 ? '2d6' : '1d6',
+    effect: (w, pts) => { w.extraDamage.push({ label: 'Enh. Damage', dice: pts >= 6 ? '4d6' : pts >= 3 ? '2d6' : '1d6' }); }
+  },
+  {
+    id: 3,
+    name: "Extended Crit",
+    costLabel: "2 pts",
+    baseCost: 2,
+    multi: false,
+    desc: "Critically hits on 19–20. If you already have an extended crit range, extend it by 1 instead.",
+    effect: (w) => { w.critRange = Math.min(w.critRange - 1, 19); }
+  },
+  {
+    id: 4,
+    name: "Advantage",
+    costLabel: "3 pts",
+    baseCost: 3,
+    multi: false,
+    desc: "Once per turn, grant yourself advantage on an attack with this weapon.",
+    effect: (w) => { w.properties.push('Advantage (1/turn)'); }
+  },
+  {
+    id: 5,
+    name: "Force Infusion",
+    costLabel: "2 pts",
+    baseCost: 2,
+    multi: false,
+    desc: "Deals force damage. Ranged: no longer requires ammo, short range = long range. Melee: reach extends to 15ft.",
+    effect: (w) => {
+      w.damageType = 'Force';
+      if (w.isRanged) { w.requiresAmmo = false; w.minRange = w.maxRange; }
+      else { w.reach = 15; }
+    }
+  },
+  {
+    id: 6,
+    name: "Devastating Crit",
+    costLabel: "1–2 pts",
+    baseCost: 1,
+    multi: true, minPts: 1, maxPts: 2,
+    desc: "Critical hits deal 1–2 extra d12s of damage. Limit = ⅓ proficiency bonus.",
+    effect: (w, pts) => { w.extraDamage.push({ label: 'Crit Bonus', dice: `${pts}d12 (on crit)` }); }
+  },
+  {
+    id: 7,
+    name: "Relentless",
+    costLabel: "3 pts",
+    baseCost: 3,
+    multi: false,
+    desc: "When you miss, you can attack again with this weapon. Once per turn.",
+    effect: (w) => { w.properties.push('Relentless (1/turn)'); }
+  },
+  {
+    id: 8,
+    name: "Extra Mastery",
+    costLabel: "2 pts (×2)",
+    baseCost: 2,
+    multi: true, minPts: 1, maxPts: 2,
+    desc: "Add 1 additional weapon mastery per point invested. Choose which masteries below.",
+    effect: (w, pts, data) => {
+      if (data && data.masteries) w.masteries.push(...data.masteries.slice(0, pts));
+    }
+  },
+  {
+    id: 9,
+    name: "Ability Override",
+    costLabel: "1 pt",
+    baseCost: 1,
+    multi: false,
+    desc: "Use a chosen ability score for attack and damage rolls instead of the default.",
+    effect: (w, pts, data) => { if (data && data.ability) w.abilityOverride = data.ability; }
+  },
+  {
+    id: 10,
+    name: "Property",
+    costLabel: "1 pt",
+    baseCost: 1,
+    multi: false,
+    desc: "Apply the Light or Heavy property to this weapon.",
+    effect: (w, pts, data) => { if (data && data.property) w.properties.push(data.property); }
+  },
+];
+
+const MASTERIES = ['Cleave','Graze','Nick','Push','Sap','Slow','Topple','Vex'];
+
+const BASE_WEAPON = {
+  name: 'Pistol',
+  damage: '1d10',
+  damageType: 'Piercing',
+  isRanged: true,
+  minRange: 30,
+  maxRange: 90,
+  requiresAmmo: true,
+  reach: 5,
+  defaultAbility: 'dex',
+  masteries: ['Vex'],
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+
+const state = {
+  left: {
+    weaponBonus: 0,
+    enhancements: {},   // id -> { active, pts, data }
+  },
+  right: {
+    weaponBonus: 0,
+    enhancements: {},
+  }
+};
+
+// init enhancement state
+['left','right'].forEach(side => {
+  ENHANCEMENTS.forEach(e => {
+    state[side].enhancements[e.id] = { active: false, pts: e.baseCost, data: {} };
+  });
+});
+
+// ── GETTERS ───────────────────────────────────────────────────────────────────
+
+function getCharStat(id) {
+  const el = document.getElementById(id);
+  return el ? parseInt(el.value) || 0 : 0;
+}
+
+function getLevel() { return getCharStat('char-level'); }
+function getProf()  { return getCharStat('char-prof'); }
+function getAbilityMod(ab) { return getCharStat('stat-' + ab); }
+
+function getPointsAllowed() { return getLevel(); }
+
+function getPointsUsed(side) {
+  let total = 0;
+  ENHANCEMENTS.forEach(e => {
+    const s = state[side].enhancements[e.id];
+    if (!s.active) return;
+    if (e.multi) total += s.pts * e.baseCost;
+    else total += e.baseCost;
+  });
+  return total;
+}
+
+function computeWeapon(side) {
+  const w = {
+    ...JSON.parse(JSON.stringify(BASE_WEAPON)),
+    extraDamage: [],
+    attackBonusDice: null,
+    critRange: 20,
+    abilityOverride: null,
+    properties: [...BASE_WEAPON.masteries],
+    masteries: [...BASE_WEAPON.masteries],
+  };
+  w.weaponBonus = state[side].weaponBonus;
+
+  ENHANCEMENTS.forEach(e => {
+    const s = state[side].enhancements[e.id];
+    if (!s.active) return;
+    const pts = e.multi ? s.pts : 1;
+    e.effect(w, pts, s.data);
+  });
+
+  // ability override
+  const ab = w.abilityOverride || w.defaultAbility;
+  const abilityMod = getAbilityMod(ab);
+  const prof = getProf();
+  const other = getCharStat('stat-other');
+
+  w.attackBonus = abilityMod + prof + w.weaponBonus + other;
+  w.abilityMod = abilityMod;
+  w.usedAbility = ab;
+  return w;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+
+function renderWeapon(side) {
+  const container = document.getElementById(`weapon-${side}-body`);
+  const used = getPointsUsed(side);
+  const allowed = getPointsAllowed();
+  const w = computeWeapon(side);
+  const prof = getProf();
+
+  // build HTML
+  let html = '';
+
+  // header
+  html += `<div class="weapon-title">
+    <div>
+      <div class="weapon-name">${w.name}</div>
+      <div class="weapon-meta">${w.isRanged ? `Range ${w.minRange}/${w.maxRange}ft` : `Reach ${w.reach}ft`} · ${w.requiresAmmo ? 'Requires Ammo' : 'No Ammo Needed'}</div>
+    </div>
+  </div>`;
+
+  // weapon bonus
+  html += `<div class="bonus-row">
+    <label>Weapon Bonus:</label>
+    <select class="bonus-select" onchange="setWeaponBonus('${side}', this.value)">
+      ${[0,1,2,3,4,5,6].map(n => `<option value="${n}" ${state[side].weaponBonus===n?'selected':''}>${n > 0 ? '+'+n : '+0'}</option>`).join('')}
+    </select>
+  </div>`;
+
+  // stat chips
+  html += `<div class="stats-bar">
+    <div class="stat-chip"><div class="val">${w.attackBonus >= 0 ? '+' : ''}${w.attackBonus}</div><div class="lbl">Attack Bonus</div></div>
+    <div class="stat-chip"><div class="val">${w.damage}${w.extraDamage.length ? ' +…' : ''}</div><div class="lbl">Base Damage</div></div>
+    <div class="stat-chip"><div class="val">${w.damageType.slice(0,5)}</div><div class="lbl">Dmg Type</div></div>
+    <div class="stat-chip"><div class="val">${w.critRange}–20</div><div class="lbl">Crit Range</div></div>
+  </div>`;
+
+  // attack breakdown
+  if (w.attackBonusDice) {
+    html += `<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Attack roll also adds <strong>${w.attackBonusDice}</strong></div>`;
+  }
+
+  // extra damage tags
+  if (w.extraDamage.length) {
+    html += `<div class="tag-list">`;
+    w.extraDamage.forEach(d => {
+      html += `<span class="tag orange">+${d.dice} ${d.label}</span>`;
+    });
+    html += `</div>`;
+  }
+
+  // properties / masteries
+  const props = [...new Set(w.properties)];
+  if (props.length) {
+    html += `<div class="tag-list" style="margin-top:6px;">`;
+    props.forEach(p => { html += `<span class="tag">${p}</span>`; });
+    html += `</div>`;
+  }
+
+  // ability note
+  html += `<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">
+    Using <strong>${w.usedAbility.toUpperCase()}</strong> modifier (${w.abilityMod >= 0 ? '+' : ''}${w.abilityMod}) · Prof +${prof} · Wpn ${w.weaponBonus >= 0 ? '+' : ''}${w.weaponBonus}
+  </div>`;
+
+  // points bar
+  const over = used > allowed;
+  html += `<div class="points-bar">
+    <span class="points-label">Points:</span>
+    <div class="pips">
+      ${Array.from({length: Math.max(allowed, used)}, (_,i) => {
+        const cls = i < used ? (over ? 'pip over' : 'pip used') : 'pip';
+        return `<div class="${cls}"></div>`;
+      }).join('')}
+    </div>
+    <span class="points-text ${over?'over':''}">${used}/${allowed}</span>
+  </div>`;
+
+  // enhancements
+  html += `<div class="enh-list">`;
+  ENHANCEMENTS.forEach(e => {
+    const s = state[side].enhancements[e.id];
+    const active = s.active;
+    const maxPts = e.multi ? Math.min(e.maxPts, e.id === 2 ? prof : e.id === 6 ? Math.max(1,Math.floor(prof/3)) : e.maxPts) : 1;
+
+    html += `<div class="enh-item ${active?'active':''}" id="enh-${side}-${e.id}">
+      <div class="enh-header" onclick="toggleEnh('${side}', ${e.id})">
+        <div class="enh-check"></div>
+        <div class="enh-info">
+          <div class="enh-title-row">
+            <span class="enh-name">${e.id}. ${e.name}</span>
+            <span class="enh-cost">${e.multi && active ? (e.baseCost > 1 ? `${s.pts}×${e.baseCost} pts` : `${s.pts} pts`) : e.costLabel}</span>
+          </div>
+          <div class="enh-desc">${e.desc}</div>
+        </div>
+      </div>`;
+
+    if (active && e.multi) {
+      html += `<div class="enh-stepper">
+        <span class="stepper-label">Points invested:</span>
+        <button class="stepper-btn" onclick="stepEnh('${side}',${e.id},-1)">−</button>
+        <span class="stepper-val">${s.pts}</span>
+        <button class="stepper-btn" onclick="stepEnh('${side}',${e.id},1)">+</button>
+        <span style="font-size:11px;color:var(--text-muted)">max ${maxPts}</span>
+      </div>`;
+    }
+
+    if (active && e.id === 8) {
+      // mastery selector
+      const chosen = s.data.masteries || [];
+      html += `<div class="enh-extra" style="flex-direction:column;align-items:flex-start;">
+        <label>Choose up to ${s.pts} masteries:</label>
+        <div class="mastery-grid" style="width:100%;margin-top:4px;">
+          ${MASTERIES.map(m => `
+            <label class="mastery-opt">
+              <input type="checkbox" ${chosen.includes(m)?'checked':''} onchange="toggleMastery('${side}',${e.id},'${m}',this.checked)"> ${m}
+            </label>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    if (active && e.id === 9) {
+      html += `<div class="enh-extra">
+        <label>Ability:</label>
+        <select onchange="setEnhData('${side}',${e.id},'ability',this.value)">
+          ${ABILITY_NAMES.map(ab => `<option value="${ab}" ${(s.data.ability||'dex')===ab?'selected':''}>${ab.toUpperCase()}</option>`).join('')}
+        </select>
+      </div>`;
+    }
+
+    if (active && e.id === 10) {
+      html += `<div class="enh-extra">
+        <label>Property:</label>
+        <select onchange="setEnhData('${side}',${e.id},'property',this.value)">
+          <option value="Light" ${(s.data.property||'Light')==='Light'?'selected':''}>Light</option>
+          <option value="Heavy" ${s.data.property==='Heavy'?'selected':''}>Heavy</option>
+        </select>
+      </div>`;
+    }
+
+    html += `</div>`;
+  });
+  html += `</div>`;
+
+  container.innerHTML = html;
+}
+
+function renderAll() {
+  renderWeapon('left');
+  renderWeapon('right');
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+
+function toggleEnh(side, id) {
+  const s = state[side].enhancements[id];
+  s.active = !s.active;
+  const e = ENHANCEMENTS.find(x => x.id === id);
+  if (!s.active) { s.pts = e.baseCost; }
+  renderAll();
+}
+
+function stepEnh(side, id, delta) {
+  const s = state[side].enhancements[id];
+  const e = ENHANCEMENTS.find(x => x.id === id);
+  const prof = getProf();
+  const maxPts = e.id === 2 ? prof : e.id === 6 ? Math.max(1,Math.floor(prof/3)) : e.maxPts;
+  s.pts = Math.max(e.minPts, Math.min(maxPts, s.pts + delta));
+  renderAll();
+}
+
+function toggleMastery(side, id, mastery, checked) {
+  const s = state[side].enhancements[id];
+  if (!s.data.masteries) s.data.masteries = [];
+  const maxAllowed = s.pts;
+  if (checked) {
+    if (s.data.masteries.length < maxAllowed) s.data.masteries.push(mastery);
+  } else {
+    s.data.masteries = s.data.masteries.filter(m => m !== mastery);
+  }
+  renderAll();
+}
+
+function setEnhData(side, id, key, value) {
+  state[side].enhancements[id].data[key] = value;
+  renderAll();
+}
+
+function setWeaponBonus(side, val) {
+  state[side].weaponBonus = parseInt(val);
+  renderAll();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+
+document.querySelectorAll('input').forEach(el => {
+  el.addEventListener('input', renderAll);
+});
+
+renderAll();
+</script>
+</body>
+</html>
