@@ -154,29 +154,58 @@
   }
   .stat-chip .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
 
-  /* ── POINTS BAR ── */
-  .points-bar {
-    margin: 14px 0 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .points-label { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
-  .pips { display: flex; gap: 4px; flex-wrap: wrap; }
-  .pip {
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    background: var(--surface2);
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .pip.used { background: var(--accent); border-color: var(--accent); }
-  .pip.over { background: var(--danger); border-color: var(--danger); }
-  .points-text { font-size: 13px; font-weight: 600; }
-  .points-text.over { color: var(--danger); }
+.points-bar {
+  margin: 14px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.points-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.pips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+.pip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface2);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pip.used{ 
+  background: var(--accent); 
+  border-color: var(--accent);
+ }
+
+.pip.over{
+  background: var(--danger); 
+  border-color: var(--danger); 
+}
+
+.points-text {
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: auto;
+  min-width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.points-text.over { color: var(--danger); }
 
   /* ── ENHANCEMENTS ── */
-  .enh-list { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .enh-list { margin-top: 16px; display: flex; flex-direction: column; gap: 4px; }
   .enh-item {
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -227,6 +256,17 @@
   }
   .enh-item.active .enh-cost { background: var(--accent); border-color: var(--accent); color: #fff; }
   .enh-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+
+  .enh-chevron {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: auto;
+    padding-left: 6px;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+    user-select: none;
+  }
+  .enh-chevron.open { transform: rotate(180deg); }
 
   /* multi-point stepper */
   .enh-stepper {
@@ -315,6 +355,28 @@
   .mastery-opt:hover { background: var(--accent-light); }
   .mastery-opt input[type=checkbox] { accent-color: var(--accent); }
 
+  .save-btn {
+    margin-left: auto;
+    padding: 6px 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .save-btn:hover { background: var(--accent-hover); }
+  .save-toast {
+    font-size: 12px;
+    color: var(--success);
+    margin-left: 10px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .save-toast.show { opacity: 1; }
+
   .divider { height: 1px; background: var(--border); margin: 12px 0; }
 
   @media (max-width: 900px) {
@@ -330,9 +392,10 @@
 
 <header>
   <div>
-    <h1>⚙ Crysteel Weapon Configurator</h1>
-    <span>Allocate enhancement points per weapon</span>
+    <h1>Crysteel Weapon Configurator for Champion Fighter</h1>
   </div>
+  <button class="save-btn" onclick="saveToUrl()">🔗 Copy Share Link</button>
+  <span class="save-toast" id="save-toast">Link copied!</span>
 </header>
 
 <div class="app">
@@ -340,29 +403,30 @@
   <div class="panel" id="stats-panel">
     <div class="panel-header">Character Stats</div>
     <div class="panel-body">
-      <div class="stat-row"><span class="stat-label">Level</span><input class="stat-input" id="char-level" type="number" min="1" max="20" value="5"></div>
-      <div class="stat-row"><span class="stat-label">Proficiency Bonus</span><input class="stat-input" id="char-prof" type="number" min="2" max="9" value="3"></div>
+      <div class="stat-row"><span class="stat-label">Level</span><input class="stat-input" id="char-level" type="number" min="1" max="20" value="4"></div>
+      <div class="stat-row"><span class="stat-label">Proficiency Bonus</span><span id="char-prof">2</span></div>
       <div class="divider"></div>
-      <div class="stat-row"><span class="stat-label">STR mod</span><input class="stat-input" id="stat-str" type="number" min="-5" max="10" value="0"></div>
-      <div class="stat-row"><span class="stat-label">DEX mod</span><input class="stat-input" id="stat-dex" type="number" min="-5" max="10" value="3"></div>
-      <div class="stat-row"><span class="stat-label">CON mod</span><input class="stat-input" id="stat-con" type="number" min="-5" max="10" value="1"></div>
-      <div class="stat-row"><span class="stat-label">INT mod</span><input class="stat-input" id="stat-int" type="number" min="-5" max="10" value="0"></div>
-      <div class="stat-row"><span class="stat-label">WIS mod</span><input class="stat-input" id="stat-wis" type="number" min="-5" max="10" value="1"></div>
-      <div class="stat-row"><span class="stat-label">CHA mod</span><input class="stat-input" id="stat-cha" type="number" min="-5" max="10" value="2"></div>
+      <div class="stat-row"><span class="stat-label">STR mod</span><input class="stat-input" id="stat-str" type="number" min="-5" max="10" value="1"></div>
+      <div class="stat-row"><span class="stat-label">DEX mod</span><input class="stat-input" id="stat-dex" type="number" min="-5" max="10" value="5"></div>
+      <div class="stat-row"><span class="stat-label">CON mod</span><input class="stat-input" id="stat-con" type="number" min="-5" max="10" value="4"></div>
+      <div class="stat-row"><span class="stat-label">INT mod</span><input class="stat-input" id="stat-int" type="number" min="-5" max="10" value="1"></div>
+      <div class="stat-row"><span class="stat-label">WIS mod</span><input class="stat-input" id="stat-wis" type="number" min="-5" max="10" value="4"></div>
+      <div class="stat-row"><span class="stat-label">CHA mod</span><input class="stat-input" id="stat-cha" type="number" min="-5" max="10" value="3"></div>
       <div class="divider"></div>
-      <div class="stat-row"><span class="stat-label">Other Attack Bonus</span><input class="stat-input" id="stat-other" type="number" min="-10" max="20" value="0"></div>
+      <div class="stat-row"><span class="stat-label">Archery Fighting Style</span><input class="stat-input" id="stat-archery" type="checkbox"></div>
+      <div class="stat-row"><span class="stat-label">Two Weapon Fighting Style</span><input class="stat-input" id="stat-twf" type="checkbox"></div>
     </div>
   </div>
 
-  <!-- Weapon Left -->
+  <!-- Mainhand -->
   <div class="panel" id="weapon-left-panel">
-    <div class="panel-header">Left Pistol</div>
+    <div class="panel-header">Main</div>
     <div class="panel-body" id="weapon-left-body"></div>
   </div>
 
-  <!-- Weapon Right -->
+  <!-- Offhand -->
   <div class="panel" id="weapon-right-panel">
-    <div class="panel-header">Right Pistol</div>
+    <div class="panel-header">Offhand</div>
     <div class="panel-body" id="weapon-right-body"></div>
   </div>
 </div>
@@ -375,7 +439,7 @@ const ABILITY_NAMES = ['str','dex','con','int','wis','cha'];
 const ENHANCEMENTS = [
   {
     id: 1,
-    name: "Accuracy",
+    name: "Bonus Accuracy",
     costLabel: "1 pt",
     baseCost: 1,
     multi: false,
@@ -394,7 +458,7 @@ const ENHANCEMENTS = [
   },
   {
     id: 3,
-    name: "Extended Crit",
+    name: "Extended Crit Range",
     costLabel: "2 pts",
     baseCost: 2,
     multi: false,
@@ -412,7 +476,7 @@ const ENHANCEMENTS = [
   },
   {
     id: 5,
-    name: "Force Infusion",
+    name: "Force Weapon",
     costLabel: "2 pts",
     baseCost: 2,
     multi: false,
@@ -425,7 +489,7 @@ const ENHANCEMENTS = [
   },
   {
     id: 6,
-    name: "Devastating Crit",
+    name: "Extra Crit Damage",
     costLabel: "1–2 pts",
     baseCost: 1,
     multi: true, minPts: 1, maxPts: 2,
@@ -434,7 +498,7 @@ const ENHANCEMENTS = [
   },
   {
     id: 7,
-    name: "Relentless",
+    name: "Attack On Miss",
     costLabel: "3 pts",
     baseCost: 3,
     multi: false,
@@ -444,10 +508,10 @@ const ENHANCEMENTS = [
   {
     id: 8,
     name: "Extra Mastery",
-    costLabel: "2 pts (×2)",
+    costLabel: "2 pts per",
     baseCost: 2,
-    multi: true, minPts: 1, maxPts: 2,
-    desc: "Add 1 additional weapon mastery per point invested. Choose which masteries below.",
+    multi: true, minPts: 1, maxPts: 8,
+    desc: "Add 1 additional weapon mastery per 2 points invested. Choose which masteries below.",
     effect: (w, pts, data) => {
       if (data && data.masteries) w.masteries.push(...data.masteries.slice(0, pts));
     }
@@ -463,7 +527,7 @@ const ENHANCEMENTS = [
   },
   {
     id: 10,
-    name: "Property",
+    name: "Extra Property",
     costLabel: "1 pt",
     baseCost: 1,
     multi: false,
@@ -492,7 +556,7 @@ const BASE_WEAPON = {
 const state = {
   left: {
     weaponBonus: 0,
-    enhancements: {},   // id -> { active, pts, data }
+    enhancements: {},
   },
   right: {
     weaponBonus: 0,
@@ -503,7 +567,12 @@ const state = {
 // init enhancement state
 ['left','right'].forEach(side => {
   ENHANCEMENTS.forEach(e => {
-    state[side].enhancements[e.id] = { active: false, pts: e.baseCost, data: {} };
+    state[side].enhancements[e.id] = {
+      active: false,
+      collapsed: false,
+      pts: e.multi ? e.minPts : 1,
+      data: {}
+     };
   });
 });
 
@@ -511,7 +580,9 @@ const state = {
 
 function getCharStat(id) {
   const el = document.getElementById(id);
-  return el ? parseInt(el.value) || 0 : 0;
+  if (!el) return 0;
+  if ("value" in el) return parseInt(el.value) || 0;
+  return parseInt(el.textContent) || 0;
 }
 
 function getLevel() { return getCharStat('char-level'); }
@@ -525,18 +596,33 @@ function getPointsUsed(side) {
   ENHANCEMENTS.forEach(e => {
     const s = state[side].enhancements[e.id];
     if (!s.active) return;
-    if (e.multi) total += s.pts * e.baseCost;
-    else total += e.baseCost;
+    if (e.id === 8) {
+      // pts = number of mastery slots; each costs 2
+      total += s.pts * 2;
+    }
+    else if (e.multi) {
+      total += s.pts * e.baseCost;
+    }
+    else {
+      total += e.baseCost;
+    }
   });
   return total;
 }
 
 function computeWeapon(side) {
+  const level = getLevel();
+
+  // Champion Fighter: improved crit at level 3 (19-20) and level 15 (18-20)
+  let baseCritRange = 20;
+  if (level >= 15) baseCritRange = 18;
+  else if (level >= 3) baseCritRange = 19;
+
   const w = {
     ...JSON.parse(JSON.stringify(BASE_WEAPON)),
     extraDamage: [],
     attackBonusDice: null,
-    critRange: 20,
+    critRange: baseCritRange,
     abilityOverride: null,
     properties: [...BASE_WEAPON.masteries],
     masteries: [...BASE_WEAPON.masteries],
@@ -550,11 +636,15 @@ function computeWeapon(side) {
     e.effect(w, pts, s.data);
   });
 
-  // ability override
   const ab = w.abilityOverride || w.defaultAbility;
   const abilityMod = getAbilityMod(ab);
   const prof = getProf();
-  const other = getCharStat('stat-other');
+  const other = document.getElementById("stat-archery").checked ? 2 : 0;
+  const twf = document.getElementById("stat-twf").checked;
+
+  // Main hand always gets modifier; offhand (right) only gets it with TWF
+  const getsDamageMod = (side === 'left') || twf;
+  w.damageMod = getsDamageMod ? abilityMod : 0;
 
   w.attackBonus = abilityMod + prof + w.weaponBonus + other;
   w.abilityMod = abilityMod;
@@ -571,10 +661,8 @@ function renderWeapon(side) {
   const w = computeWeapon(side);
   const prof = getProf();
 
-  // build HTML
   let html = '';
 
-  // header
   html += `<div class="weapon-title">
     <div>
       <div class="weapon-name">${w.name}</div>
@@ -582,7 +670,6 @@ function renderWeapon(side) {
     </div>
   </div>`;
 
-  // weapon bonus
   html += `<div class="bonus-row">
     <label>Weapon Bonus:</label>
     <select class="bonus-select" onchange="setWeaponBonus('${side}', this.value)">
@@ -590,29 +677,26 @@ function renderWeapon(side) {
     </select>
   </div>`;
 
-  // stat chips
+  const damageModStr = w.damageMod >= 0 ? `+${w.damageMod}` : `${w.damageMod}`;
+  const damageDisplay = `${w.damage}${damageModStr}`;
+
   html += `<div class="stats-bar">
     <div class="stat-chip"><div class="val">${w.attackBonus >= 0 ? '+' : ''}${w.attackBonus}</div><div class="lbl">Attack Bonus</div></div>
-    <div class="stat-chip"><div class="val">${w.damage}${w.extraDamage.length ? ' +…' : ''}</div><div class="lbl">Base Damage</div></div>
-    <div class="stat-chip"><div class="val">${w.damageType.slice(0,5)}</div><div class="lbl">Dmg Type</div></div>
-    <div class="stat-chip"><div class="val">${w.critRange}–20</div><div class="lbl">Crit Range</div></div>
+    <div class="stat-chip"><div class="val" style="white-space: nowrap;">${damageDisplay}</div><div class="lbl">Base<br>Damage</div></div>
+    <div class="stat-chip"><div class="val">${w.damageType.slice(0,10)}</div><div class="lbl">Dmg<br>Type</div></div>
+    <div class="stat-chip"><div class="val">${w.critRange}–20</div><div class="lbl">Crit<br>Range</div></div>
   </div>`;
 
-  // attack breakdown
   if (w.attackBonusDice) {
     html += `<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Attack roll also adds <strong>${w.attackBonusDice}</strong></div>`;
   }
 
-  // extra damage tags
   if (w.extraDamage.length) {
     html += `<div class="tag-list">`;
-    w.extraDamage.forEach(d => {
-      html += `<span class="tag orange">+${d.dice} ${d.label}</span>`;
-    });
+    w.extraDamage.forEach(d => { html += `<span class="tag orange">+${d.dice} ${d.label}</span>`; });
     html += `</div>`;
   }
 
-  // properties / masteries
   const props = [...new Set(w.properties)];
   if (props.length) {
     html += `<div class="tag-list" style="margin-top:6px;">`;
@@ -620,12 +704,10 @@ function renderWeapon(side) {
     html += `</div>`;
   }
 
-  // ability note
   html += `<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">
     Using <strong>${w.usedAbility.toUpperCase()}</strong> modifier (${w.abilityMod >= 0 ? '+' : ''}${w.abilityMod}) · Prof +${prof} · Wpn ${w.weaponBonus >= 0 ? '+' : ''}${w.weaponBonus}
   </div>`;
 
-  // points bar
   const over = used > allowed;
   html += `<div class="points-bar">
     <span class="points-label">Points:</span>
@@ -638,28 +720,35 @@ function renderWeapon(side) {
     <span class="points-text ${over?'over':''}">${used}/${allowed}</span>
   </div>`;
 
-  // enhancements
   html += `<div class="enh-list">`;
   ENHANCEMENTS.forEach(e => {
     const s = state[side].enhancements[e.id];
     const active = s.active;
     const maxPts = e.multi ? Math.min(e.maxPts, e.id === 2 ? prof : e.id === 6 ? Math.max(1,Math.floor(prof/3)) : e.maxPts) : 1;
 
+    // For enh #8: s.pts = number of mastery slots (1–8); display cost as slots×2
+    const costBadge = e.id === 8 && active
+      ? `${s.pts}×2 pts`
+      : e.multi && active
+        ? (e.baseCost > 1 ? `${s.pts}×${e.baseCost} pts` : `${s.pts} pts`)
+        : e.costLabel;
+
     html += `<div class="enh-item ${active?'active':''}" id="enh-${side}-${e.id}">
-      <div class="enh-header" onclick="toggleEnh('${side}', ${e.id})">
-        <div class="enh-check"></div>
-        <div class="enh-info">
+      <div class="enh-header">
+        <div class="enh-check" onclick="toggleEnh('${side}', ${e.id})"></div>
+        <div class="enh-info" onclick="toggleEnh('${side}', ${e.id})">
           <div class="enh-title-row">
             <span class="enh-name">${e.id}. ${e.name}</span>
-            <span class="enh-cost">${e.multi && active ? (e.baseCost > 1 ? `${s.pts}×${e.baseCost} pts` : `${s.pts} pts`) : e.costLabel}</span>
+            <span class="enh-cost">${costBadge}</span>
           </div>
           <div class="enh-desc">${e.desc}</div>
         </div>
+        ${active ? `<span class="enh-chevron ${s.collapsed?'':'open'}" onclick="collapseEnh('${side}',${e.id})">▲</span>` : ''}
       </div>`;
 
-    if (active && e.multi) {
+    if (active && !s.collapsed && e.multi) {
       html += `<div class="enh-stepper">
-        <span class="stepper-label">Points invested:</span>
+        <span class="stepper-label">${e.id === 8 ? 'Masteries' : 'Points invested'}:</span>
         <button class="stepper-btn" onclick="stepEnh('${side}',${e.id},-1)">−</button>
         <span class="stepper-val">${s.pts}</span>
         <button class="stepper-btn" onclick="stepEnh('${side}',${e.id},1)">+</button>
@@ -667,11 +756,10 @@ function renderWeapon(side) {
       </div>`;
     }
 
-    if (active && e.id === 8) {
-      // mastery selector
+    if (active && !s.collapsed && e.id === 8) {
       const chosen = s.data.masteries || [];
       html += `<div class="enh-extra" style="flex-direction:column;align-items:flex-start;">
-        <label>Choose up to ${s.pts} masteries:</label>
+        <label>Choose up to ${s.pts} ${s.pts === 1 ? 'mastery' : 'masteries'}:</label>
         <div class="mastery-grid" style="width:100%;margin-top:4px;">
           ${MASTERIES.map(m => `
             <label class="mastery-opt">
@@ -681,7 +769,7 @@ function renderWeapon(side) {
       </div>`;
     }
 
-    if (active && e.id === 9) {
+    if (active && !s.collapsed && e.id === 9) {
       html += `<div class="enh-extra">
         <label>Ability:</label>
         <select onchange="setEnhData('${side}',${e.id},'ability',this.value)">
@@ -690,7 +778,7 @@ function renderWeapon(side) {
       </div>`;
     }
 
-    if (active && e.id === 10) {
+    if (active && !s.collapsed && e.id === 10) {
       html += `<div class="enh-extra">
         <label>Property:</label>
         <select onchange="setEnhData('${side}',${e.id},'property',this.value)">
@@ -714,11 +802,41 @@ function renderAll() {
 
 // ── ACTIONS ───────────────────────────────────────────────────────────────────
 
+function updateProf() {
+  const level = getLevel();
+  const prof = 2 + Math.floor((level - 1) / 4);
+  document.getElementById("char-prof").textContent = prof;
+
+  // Clamp prof-limited enhancements on both weapons
+  const maxForEnh2 = prof;
+  const maxForEnh6 = Math.max(1, Math.floor(prof / 3));
+  ['left', 'right'].forEach(side => {
+    const s2 = state[side].enhancements[2];
+    if (s2.active && s2.pts > maxForEnh2) s2.pts = maxForEnh2;
+    const s6 = state[side].enhancements[6];
+    if (s6.active && s6.pts > maxForEnh6) s6.pts = maxForEnh6;
+  });
+}
+
 function toggleEnh(side, id) {
   const s = state[side].enhancements[id];
   s.active = !s.active;
   const e = ENHANCEMENTS.find(x => x.id === id);
-  if (!s.active) { s.pts = e.baseCost; }
+  if (!s.active) {
+    s.pts = e.multi ? e.minPts : 1;
+    s.collapsed = false;
+    s.data = {};
+  } else {
+    s.collapsed = false; // always open when first activated
+    // Seed defaults so effects fire immediately on activation
+    if (id === 9) s.data = { ability: 'dex' };
+    if (id === 10) s.data = { property: 'Light' };
+  }
+  renderAll();
+}
+
+function collapseEnh(side, id) {
+  state[side].enhancements[id].collapsed = !state[side].enhancements[id].collapsed;
   renderAll();
 }
 
@@ -728,17 +846,32 @@ function stepEnh(side, id, delta) {
   const prof = getProf();
   const maxPts = e.id === 2 ? prof : e.id === 6 ? Math.max(1,Math.floor(prof/3)) : e.maxPts;
   s.pts = Math.max(e.minPts, Math.min(maxPts, s.pts + delta));
+  // Trim chosen masteries if slots were reduced
+  if (id === 8 && s.data.masteries) {
+    s.data.masteries = s.data.masteries.slice(0, s.pts);
+  }
   renderAll();
 }
 
 function toggleMastery(side, id, mastery, checked) {
   const s = state[side].enhancements[id];
   if (!s.data.masteries) s.data.masteries = [];
-  const maxAllowed = s.pts;
+  const e = ENHANCEMENTS.find(x => x.id === id);
+
   if (checked) {
-    if (s.data.masteries.length < maxAllowed) s.data.masteries.push(mastery);
+    if (s.data.masteries.length < s.pts) {
+      // Free slot available — just add
+      s.data.masteries.push(mastery);
+    } else if (s.pts < e.maxPts) {
+      // No free slot but can expand — bump slots by 1
+      s.pts += 1;
+      s.data.masteries.push(mastery);
+    }
+    // else at hard cap, silently ignore
   } else {
     s.data.masteries = s.data.masteries.filter(m => m !== mastery);
+    // Shrink slots by 1, floor at minPts
+    s.pts = Math.max(e.minPts, s.pts - 1);
   }
   renderAll();
 }
@@ -753,12 +886,79 @@ function setWeaponBonus(side, val) {
   renderAll();
 }
 
+// ── SAVE / LOAD ───────────────────────────────────────────────────────────────
+
+function saveToUrl() {
+  const snapshot = {
+    level: getCharStat('char-level'),
+    str: getCharStat('stat-str'),
+    dex: getCharStat('stat-dex'),
+    con: getCharStat('stat-con'),
+    int: getCharStat('stat-int'),
+    wis: getCharStat('stat-wis'),
+    cha: getCharStat('stat-cha'),
+    archery: document.getElementById('stat-archery').checked,
+    twf: document.getElementById('stat-twf').checked,
+    left: serializeSide('left'),
+    right: serializeSide('right'),
+  };
+  const encoded = btoa(JSON.stringify(snapshot));
+  const url = location.href.split('#')[0] + '#' + encoded;
+  navigator.clipboard.writeText(url).then(() => {
+    const toast = document.getElementById('save-toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+
+function serializeSide(side) {
+  const out = { weaponBonus: state[side].weaponBonus, enhancements: {} };
+  ENHANCEMENTS.forEach(e => {
+    const s = state[side].enhancements[e.id];
+    out.enhancements[e.id] = { active: s.active, collapsed: s.collapsed, pts: s.pts, data: JSON.parse(JSON.stringify(s.data)) };
+  });
+  return out;
+}
+
+function loadFromUrl() {
+  const hash = location.hash.slice(1);
+  if (!hash) return;
+  try {
+    const snap = JSON.parse(atob(hash));
+    document.getElementById('char-level').value = snap.level ?? 4;
+    document.getElementById('stat-str').value = snap.str ?? 0;
+    document.getElementById('stat-dex').value = snap.dex ?? 0;
+    document.getElementById('stat-con').value = snap.con ?? 0;
+    document.getElementById('stat-int').value = snap.int ?? 0;
+    document.getElementById('stat-wis').value = snap.wis ?? 0;
+    document.getElementById('stat-cha').value = snap.cha ?? 0;
+    document.getElementById('stat-archery').checked = snap.archery ?? false;
+    document.getElementById('stat-twf').checked = snap.twf ?? false;
+    ['left','right'].forEach(side => {
+      if (!snap[side]) return;
+      state[side].weaponBonus = snap[side].weaponBonus ?? 0;
+      ENHANCEMENTS.forEach(e => {
+        const saved = snap[side].enhancements?.[e.id];
+        if (!saved) return;
+        state[side].enhancements[e.id].active = saved.active ?? false;
+        state[side].enhancements[e.id].collapsed = saved.collapsed ?? false;
+        state[side].enhancements[e.id].pts = saved.pts ?? (e.multi ? e.minPts : 1);
+        state[side].enhancements[e.id].data = saved.data ?? {};
+      });
+    });
+  } catch(err) {
+    console.warn('Could not load state from URL:', err);
+  }
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 
 document.querySelectorAll('input').forEach(el => {
-  el.addEventListener('input', renderAll);
+  el.addEventListener('input', () => {updateProf(); renderAll();});
 });
 
+loadFromUrl();
+updateProf();
 renderAll();
 </script>
 </body>
