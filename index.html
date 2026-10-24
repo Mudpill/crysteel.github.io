@@ -639,7 +639,7 @@ function computeWeapon(side) {
   const twf   = document.getElementById('stat-twf').checked;
 
   const getsDamageMod = (side === 'left') || twf;
-  w.damageMod   = getsDamageMod ? abilityMod : 0;
+  w.damageMod   = (getsDamageMod ? abilityMod : 0) + w.weaponBonus;
   w.attackBonus = abilityMod + prof + w.weaponBonus + other;
   w.abilityMod  = abilityMod;
   w.usedAbility = ab;
